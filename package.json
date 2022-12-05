@@ -1,6 +1,6 @@
 {
     "name": "@bitpoolos/edge-awair",
-    "version": "0.0.2",
+    "version": "1.0.0",
     "description": "Node for Integrating with the Awair API.",
     "dependencies": {
         "https": "1.0.0",
