@@ -1,6 +1,6 @@
 {
     "name": "@bitpoolos/edge-awair",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Node for Integrating with the Awair API.",
     "dependencies": {
         "https": "1.0.0",
@@ -26,7 +26,7 @@
     },
     "author": {
         "name": "bitpool-dev",
-        "email": "admin@bitpool.com"
+        "email": "dev@bitpool.com"
     },
     "license": "MIT",
     "publishConfig": {
@@ -34,11 +34,11 @@
         "registry": "https://registry.npmjs.org/"
     },
     "bugs": {
-        "url": "https://github.com/bitpool/@bitpoolos/edge-awair/issues"
+        "url": "https://github.com/bitpool/edge-awair/issues"
     },
-    "homepage": "https://github.com/bitpool/@bitpoolos/edge-awair#readme",        
+    "homepage": "https://github.com/bitpool/edge-awair#readme",        
     "repository": {
         "type": "github",
-        "url": "git+https://github.com/@bitpoolos/edge-awair.git"
+        "url": "git+https://github.com/edge-awair.git"
     }
 }
