@@ -1,0 +1,74 @@
+[
+    {
+        "id": "3393967e336a9c29",
+        "type": "tab",
+        "label": "1 - Read Device",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "d06a06c981466a78",
+        "type": "inject",
+        "z": "3393967e336a9c29",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 60,
+        "wires": [
+            [
+                "a9cb1b80171f0206"
+            ]
+        ]
+    },
+    {
+        "id": "fab5ac3d35e0a578",
+        "type": "debug",
+        "z": "3393967e336a9c29",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 570,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "a9cb1b80171f0206",
+        "type": "bp-Awair",
+        "z": "3393967e336a9c29",
+        "bpAwairDisplayName": "",
+        "bpAwairShowNodeStatus": true,
+        "bpAwairShowDebugWarnings": true,
+        "bpAwairJSONOutput": true,
+        "bpAwairIndividualOutput": false,
+        "bpAwairToken": "",
+        "bpAwairCurrentDevice": "Meld HQ - 1989 - awair-omni",
+        "x": 350,
+        "y": 60,
+        "wires": [
+            [
+                "fab5ac3d35e0a578"
+            ]
+        ]
+    }
+]

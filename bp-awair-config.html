@@ -1,0 +1,90 @@
+<!--
+  MIT License Copyright 2021, 2022 - Bitpool Pty Ltd
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType("bp-awair-config", {
+    category: "config",
+    defaults: {
+      Name: {value: "",required:true},
+      OrgID: {value: "",required:true},
+      Token: {value: "",required:true}
+    },
+    label: function () {
+      return this.Name || "Token";
+    }
+  });
+
+</script>
+
+<!-- NODE PROPERTIES DIAGLOG ------------------------------------------------------->
+<script type="text/html" data-template-name="bp-awair-config">
+  
+  <!-- CSSTYLING ---------------------------------------------------------------------->
+  <style>
+    .flex-container-row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .flex-container-column{
+      display: flex;
+      flex-direction: column; 
+    }
+
+    .row-content{
+      padding-top: 7px;
+      padding-right: 10px;
+      padding-bottom: 10px;
+      padding-left: 10px;
+    }
+    </style>
+
+  <!-- BODY --------------------------------------------------------------------------->
+
+  <div class="flex-container-row" style="padding-bottom:10px">
+    <div class="flex-container-column" style="width:35%; align-items: flex-end;">
+      <label for="node-config-input-Name" class="row-content">Name:</label>
+      <!-- <label for="node-config-input-Name"><i class="icon-tag row-content"></i>Name:</label> -->
+    </div>
+    <div class="flex-container-column" style="width:65%; align-items: flex-start;">
+      <input type="text" id="node-config-input-Name" placeholder="Name" class="row-content" style="width:100%">
+    </div>
+  </div>
+
+  <div class="flex-container-row" style="padding-bottom:10px">
+    <div class="flex-container-column" style="width:35%; align-items: flex-end;">
+      <label for="node-config-input-OrgID" class="row-content">Organisation ID:</label>
+      <!-- <label for="node-config-input-OrgID"><i class="icon-tag row-content"></i>Organisation Id</label> -->
+    </div>
+    <div class="flex-container-column" style="width:65%; align-items: flex-start;">
+      <input type="text" id="node-config-input-OrgID" placeholder="OrgID" class="row-content" style="width:100%">
+    </div>
+  </div>
+
+  <div class="flex-container-row" style="padding-bottom:10px">
+    <div class="flex-container-column" style="width:35%; align-items: flex-end;">
+      <label for="node-config-input-Token" class="row-content">Authorisation Token:</label>
+      <!-- <label for="node-config-input-Token"><i class="icon-tag row-content"></i>Token</label> -->
+    </div>
+    <div class="flex-container-column" style="width:65%; align-items: flex-start;">
+      <input type="password" id="node-config-input-Token" placeholder="Token" class="row-content" style="width:100%">
+    </div>
+  </div>
+
+</script>
+
+<!-- NODE HELP DIALOG --------------------------------------------------------------->
+
+<script type="text/html" data-help-name="bp-awair-config">
+  <p> This node is used for configuring connections to the Awair API.</p>
+  <hr style="width: 100%;">
+    <h3>Resources:</h3>
+    <h4><strong>Online Docs:</strong></h4>
+    <ul type="1">
+      <li><a href="https://www.bitpool.com/">bitpool.com</a> - check us out here.</li>
+      <li><a href="https://app.bitpool.com/">app.bitpool.com</a> - set up your account.</li>
+      <li><a href="https://wiki.bitpool.com/">wiki.bitpool.com</a> - find more documentation.</li>
+    </ul>
+  </script>
+  

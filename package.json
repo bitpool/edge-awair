@@ -1,0 +1,44 @@
+{
+    "name": "@bitpoolos/edge-awair",
+    "version": "0.0.2",
+    "description": "Node for Integrating with the Awair API.",
+    "dependencies": {
+        "https": "1.0.0",
+        "node-fetch": "^2.6.7"
+    },
+    "optionalDependencies": {
+    },        
+    "node-red": {
+        "version": ">=2.2.2",
+        "nodes": {
+            "bp-awair-node-config": "bp-awair-config.js",
+            "bp-awair-node": "bp-awair.js"
+        }
+    },
+    "keywords": [
+        "node-red",
+        "bitpool",
+        "iot",
+		"awair"
+    ],
+    "engines": {
+        "node": ">=12.0.0"
+    },
+    "author": {
+        "name": "bitpool-dev",
+        "email": "admin@bitpool.com"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "bugs": {
+        "url": "https://github.com/bitpool/@bitpoolos/edge-awair/issues"
+    },
+    "homepage": "https://github.com/bitpool/@bitpoolos/edge-awair#readme",        
+    "repository": {
+        "type": "github",
+        "url": "git+https://github.com/@bitpoolos/edge-awair.git"
+    }
+}

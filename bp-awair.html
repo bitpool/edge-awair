@@ -1,0 +1,510 @@
+<!--
+  MIT License Copyright 2021, 2022 - Bitpool Pty Ltd
+-->
+
+<!-- PrimeVue -->
+<link href="resources/@bitpoolos/edge-awair/primevue-bitpool-theme.css" rel="stylesheet" />
+<link href="resources/@bitpoolos/edge-awair/primevue.min.css" rel="stylesheet" />
+<link href="resources/@bitpoolos/edge-awair/primeflex.min.css" rel="stylesheet" />
+<link href="resources/@bitpoolos/edge-awair/primeicons.css" rel="stylesheet" />
+
+<script>
+    // Custom script loader to ensure dependencies load every time
+    (function () {
+        LoadScripts();
+
+        function LoadScripts(async) {
+            if (async === undefined) {
+                async = false;
+            }
+            var scripts = [];
+            var _scripts = ['resources/@bitpoolos/edge-awair/vue.global.prod.js', 'resources/@bitpoolos/edge-awair/core.min.js','resources/@bitpoolos/edge-awair/accordion.min.js','resources/@bitpoolos/edge-awair/accordiontab.min.js'];
+
+            if (async) {
+                LoadScriptsAsync(_scripts, scripts)
+            } else {
+                LoadScriptsSync(_scripts, scripts)
+            }
+        }
+
+        // What you are looking for :
+        function LoadScriptsSync(_scripts, scripts) {
+
+            var x = 0;
+            var loopArray = function (_scripts, scripts) {
+                // Call itself
+                loadScript(_scripts[x], scripts[x], function () {
+                    // Set x to next item
+                    x++;
+                    // Any more items in array?
+                    if (x < _scripts.length) {
+                        loopArray(_scripts, scripts);
+                    }
+                });
+            }
+            loopArray(_scripts, scripts);
+        }
+
+        // Async load as in your code
+        function LoadScriptsAsync(_scripts, scripts) {
+            for (var i = 0; i < _scripts.length; i++) {
+                loadScript(_scripts[i], scripts[i], function () { });
+            }
+        }
+
+        // Load script function with callback to handle synchronicity 
+        function loadScript(src, script, callback) {
+
+            script = document.createElement('script');
+            script.onerror = function () {
+                // handling error when loading script
+                console.log('Error - could not load AWAIR node HTML dependencies')
+            }
+            script.onload = function () {
+                callback();
+            }
+            script.src = src;
+            document.getElementsByTagName('head')[0].appendChild(script);
+        }
+    })();
+</script>
+
+<script type="text/javascript">
+
+  // GET DEVICES FUNCTION ============================================================
+  // This function queries the API for a current list of devices and populates them
+  // into the device list object (Dropdown on the UI).
+  // =================================================================================
+  function GetDevices(){
+
+    var Option_List = document.getElementById("Device_List");                         // Get the device list object
+    Option_List.options.length=0;                                                     // Clear all existing device options
+    var New_Option = "";                                                              // Create a variable to hold a new option
+    
+    // Call the GET DEVICES endpoint to get the current list of available devices
+    $.getJSON('/bitpool-Awair-data/getDevices/', function(data) {
+
+      if(data.hasOwnProperty("devices") != 0){                                        // If devices were found                                               
+        for(var item of data.devices){                                                // Loop through the found devices
+          New_Option = document.createElement("option");                              // Create a new option element
+          New_Option.text = item.display_name + " - " + item.id + " - " + item.type;  // Set the value of the option element
+          Option_List.add(New_Option);                                                // Add the option to the list
+        }
+      }
+      else{                                                                           // If no devices were found
+        New_Option = document.createElement("option");                                // Create a new option element
+        New_Option.text = "No Devices Found";                                         // Set the value of the option element
+        Option_List.add(New_Option);                                                  // Add the option element to the list
+      }
+
+    })
+    
+    .fail(function() {                                                                // If the above request fails
+      New_Option = document.createElement("option");                                  // Create a new option element
+      New_Option.text = "No Devices Found";                                           // Set the value of the option element
+      Option_List.add(New_Option);                                                    // Add the option element to the list
+      console.log("ERROR: Get devices did not return a value.");                      // Output an error message to the console
+    });
+  }
+
+  // NODE RED REGISTRATION -----------------------------------------------------------
+
+  RED.nodes.registerType("bp-Awair", {
+    category: "Bitpool Awair",
+    defaults: {
+      bpAwairDisplayName: {value: ""},
+      bpAwairShowNodeStatus: {value: true},
+      bpAwairShowDebugWarnings: {value: true},
+      bpAwairJSONOutput: {value: false},
+      bpAwairIndividualOutput: {value: true},
+      bpAwairRoundingEnabled: {value: true},
+      bpAwairRoundingPlaces: {value: 2},
+      bpAwairToken: {value:"", type:"bp-awair-config"},
+      bpAwairCurrentDevice: {value: "Please Select a Device"}
+    },
+    inputs: 1,
+    outputs: 1,
+    color: "#00aeef",
+    icon: "bitpool.svg",
+    label: function () {
+      return this.bpAwairDisplayName || "Awair Device";
+    },
+    paletteLabel: function () {
+      return "Awair Device";
+    },
+    oneditprepare: function () {
+
+      const { createApp, ref, onMounted } = Vue;
+
+      // PRIME VUE APP ---------------------------------------------------------------
+      const App = {
+        data() {
+            return {
+              Display_Device_Selection: false,
+            }
+          },
+
+          setup() {
+
+          },
+          
+          mounted() {
+            let app = this;
+          }, 
+          
+          methods: {
+
+            // SELECT DEVICE FUNCTION ================================================
+            // This function is called when the select device button is pressed. It is
+            // used to transfer the current selection in the available devices
+            // dropdown to the current device display.
+            // =======================================================================
+            SelectDevice(event) {
+              let app = this;
+
+              var Selected_Device = document.getElementById("Device_List").value;     // Read in the current selection from the device list
+
+              // If a valid device has been found and selected
+              if((Selected_Device != "No Devices Found") && (Selected_Device != "Refreshing please wait...")){ 
+                document.getElementById("node-input-bpAwairCurrentDevice").value = Selected_Device; // Store the device selected in the current device field
+              }
+
+              app.Display_Device_Selection = false;                                   // Hide the device selection display
+            },
+
+            // DISCOVER DEVICES FUNCTION =============================================
+            // This function is called when the discover devices button is clicked.
+            // =======================================================================
+            DiscoverDevices(event){
+              let app = this;
+              app.Display_Device_Selection = true;                                    // Display the Device Selection UI
+            }
+          },
+
+          // Declare Prime Vue Component
+          components: {
+              "p-button": primevue.button,                                            // Declare P BUtton
+          }
+      };
+      
+      createApp(App)
+          .use(primevue.config.default, { ripple: true })
+          .mount("#app");
+      
+      let tabs = RED.tabs.create(
+        {
+          id: "node-input-display-tabs",
+          onchange: function (tab) {
+            $("#node-input-tabs-content").children().hide()
+            $("#" + tab.id).show()
+          }
+        })
+      tabs.addTab(                                                                    // Create the Settings Tab
+      {
+          id: "Awair-settings-tab",
+          label: "Device Settings"
+      })        
+
+      tabs.addTab(                                                                    // Create the Options Tab
+        {
+          id: "Awair-options-tab",
+          label: "Options"
+        })
+
+      $("#node-input-bpAwairDisplayName").typedInput({type: 'str', types: ['str']});
+      
+      document.getElementById("node-input-bpAwairCurrentDevice").value = this.bpAwairCurrentDevice;   // Initialise the current device value
+      document.getElementById("node-input-bpAwairRoundingPlaces").value = this.bpAwairRoundingPlaces; // Initialise the rounding places value
+
+    },
+    oneditsave: function () {                                                         // This function is called on ok of the node edit dialog
+
+    }
+
+  });
+
+</script>
+
+<!-- NODE PROPERTIES DIAGLOG -------------------------------------------------------->
+<script type="text/html" data-template-name="bp-Awair">
+
+  <!-- CSSTYLING -------------------------------------------------------------------->
+  <style>
+    .flex-container-row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .flex-container-column{
+      display: flex;
+      flex-direction: column;  
+    }
+
+    .row-content{
+      padding-top: 7px;
+      padding-right: 10px;
+      padding-bottom: 10px;
+      padding-left: 10px;
+    }
+
+    .p-button{
+      height: 34px;
+      width: 90px;
+      text-align: center;
+      align-items: center;
+      
+    }
+
+    .p-button:hover{
+      box-shadow: 0px 0px 10px #00AEEF;
+    }
+
+    .p-button.p-button-text {
+      background-color: transparent;
+      color: #00AEEF !important;
+      border-color: transparent;
+    }
+
+    .p-button.p-button-outlined {
+      background-color: transparent;
+      color: #00AEEF !important;
+      border: 1px solid;
+    }
+
+    .objectPropertiesLabel {
+      display: flex !important;
+      flex-direction: row;
+      align-items: center;
+    }
+  
+    .checkbox-round {
+      width: 13px !important;
+      height: 13px !important;
+      background-color: white;
+      border-radius: 50%;
+      vertical-align: top;
+      border: 1px solid #ddd;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .checkbox-round:checked {
+              background-color: #00AEEF;
+    }
+    .checkbox-round:focus {
+              outline: none !important;
+    }
+  
+    .FadeDevice-enter-active{
+      transition: opacity 1s ease;
+      transition-delay: 1s;
+    }
+
+    .FadeDevice-leave-active {
+      transition: opacity 1s ease;
+    }
+  
+    .FadeDevice-enter-from,
+    .FadeDevice-leave-to {
+      opacity: 0;
+    }
+
+    .FadeBar-enter-active{
+      transition: opacity 0.1s ease;
+      transition-delay: 2s;
+    }
+
+    .FadeBar-leave-active {
+      transition: opacity 0.1s ease;
+    }
+  
+    .FadeBar-enter-from,
+    .FadeDevice-leave-to {
+      opacity: 0;
+    }
+
+    .vertslide-enter-active {
+      animation: slide-in 1s;
+    }
+
+    .vertslide-leave-active {
+      animation: slide-in 1s reverse;
+      transition-delay: 1s;
+    }
+
+    @keyframes slide-in {
+      0% {
+        transform: translateY(-73px);
+      }
+      100% {
+        transform: translateY(0px);
+      }     
+    }
+  
+  </style>
+
+  <div class="form-row">
+    <label for="node-input-bpAwairDisplayName"><i class="icon-tag"></i>Name</label>
+    <input type="text" id="node-input-bpAwairDisplayName" placeholder="Awair description">
+  </div>
+
+  <div class='form-row node-input-display-tabs-row'>
+    <ul style='min-width:600px;margin-bottom:20px' id='node-input-display-tabs'></ul>
+  </div>
+
+  <div id='node-input-tabs-content'>
+
+    <!-- SETTINGS TAB --------------------------------------------------------------->
+    <div id='Awair-settings-tab' style='display:none'>
+      
+      <div class="flex-container-row" Style="padding-top:15px">
+        <label for="node-input-bpAwairToken" class="row-content">Authentification:</label>
+        <input type="text" id="node-input-bpAwairToken" class="row-content">
+      </div>
+    
+      <hr>
+
+      <div id="app">
+
+        <div id="Selected_Device" class="flex-container-row">
+          <label id="node-label-bpAwairCurrentDevice" for="node-input-bpAwairCurrentDevice" class="row-content">Device:</label>
+          <input type="text" id="node-input-bpAwairCurrentDevice" class="row-content" style ="width:68%" disabled>
+          <p-button id="Discover_Button" class="p-button-raised p-button-text" style ="margin-left:20px" @click="DiscoverDevices()" :disabled="Display_Device_Selection == true" onClick="GetDevices()">Discover</p-button>
+        </div>    
+
+        <br>          
+        <hr style="margin-top:-8px">
+          
+        <Transition name="FadeDevice" mode="out-in">
+          <div id="Device_Selection" v-show="Display_Device_Selection" class="flex-container-row">
+
+            <label for="Device_List" class="row-content">Available Devices:</label>
+            <select name="Device_List" id="Device_List" class="row-content" style="width:60%">
+              <option>Refreshing please wait...</option>
+            </select>
+            <p-button icon="pi pi-check" class="p-button-rounded p-button-outlined" style ="margin-left:10px" @click="SelectDevice()"></p-button>
+            <p-button icon="pi pi-times" class="p-button-rounded p-button-outlined" style ="margin-left:10px" @click="Display_Device_Selection = false"></p-button>
+
+          </div>
+        </Transition> 
+
+        <Transition name="vertslide" mode="out-in">
+          <hr v-if="Display_Device_Selection" style="margin-top:10px">
+        </Transition>
+
+      </div>
+    </div>
+
+    <!-- OPTIONS TAB ---------------------------------------------------------------->
+    <div id='Awair-options-tab' style='display:none'>
+
+      <div class="form-row">
+        <p><u>Monitoring:</u></p>
+      </div>
+
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:50px; align-items: flex-start;">
+          <input class="form-check-input objectProp" type="checkbox" id="node-input-bpAwairShowNodeStatus" style="margin-left:20px">
+        </div>
+        <div class="flex-container-column" style="width:50%; align-items: flex-start;">
+          <label id ="node-label-bpAwairShowNodeStatus" for="node-input-bpAwairShowNodeStatus" class="objectPropertiesLabel">Show input activity on node status</label>
+        </div>
+      </div>
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:50px; align-items: flex-start;">
+          <input class="form-check-input objectProp" type="checkbox" id="node-input-bpAwairShowDebugWarnings" style="margin-left:20px">
+        </div>
+        <div class="flex-container-column" style="width:50%; align-items: flex-start;">
+          <label id ="node-label-bpAwairShowDebugWarnings" for="node-input-bpAwairShowDebugWarnings" class="objectPropertiesLabel">Show any warnings in debug tab</label>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="form-row">
+        <p><u>Output Message Type:</u></p>
+      </div>
+
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:50px; align-items: flex-start;">
+          <input class="form-check-input objectProp Output_Msg_Format_ChkBox" type="checkbox" id="node-input-bpAwairJSONOutput" style="margin-left:20px" onclick="document.getElementById('node-input-bpAwairIndividualOutput').checked = !(this.checked)">
+        </div>
+        <div class="flex-container-column" style="width:50%; align-items: flex-start;">
+          <label id ="node-label-bpAwairJSONOutput" for="node-input-bpAwairJSONOutput" class="objectPropertiesLabel">JSON block per device</label>
+        </div>
+      </div>
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:50px; align-items: flex-start;">
+          <input class="form-check-input objectProp Output_Msg_Format_ChkBox" type="checkbox" id="node-input-bpAwairIndividualOutput" style="margin-left:20px" onclick="document.getElementById('node-input-bpAwairJSONOutput').checked = !(this.checked)">
+        </div>
+        <div class="flex-container-column" style="width:50%; align-items: flex-start;">
+          <label id ="node-label-bpAwairIndividualOutput" for="node-input-bpAwairIndividualOutput" class="objectPropertiesLabel">Individual messages (MQTT Compatible)</label>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="form-row">
+        <p><u>Decimal Place Precision:</u></p>
+      </div>
+
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:50px; align-items: flex-start;">
+          <input class="form-check-input objectProp" type="checkbox" id="node-input-bpAwairRoundingEnabled" style="margin-left:20px">
+        </div>
+        <div class="flex-container-column" style="width:50%; align-items: flex-start;">
+          <label id ="node-label-bpAwairRoundingEnabled" for="node-input-bpAwairRoundingEnabled" class="objectPropertiesLabel">Enable Output Rounding</label>
+        </div>
+      </div>
+
+      <div class="flex-container-row">
+        <div class="flex-container-column" style="width:225px; align-items: flex-start;">
+          <label id ="node-label-bpAwairRoundingPlaces" for="node-input-bpAwairRoundingPlaces" class="objectPropertiesLabel" style="margin-top:5px; margin-left:50px">Rounding Decimal Places:</label>
+        </div>
+        <div class="flex-container-column" style="width:20px; align-items: flex-start;">
+          <input type="number" id="node-input-bpAwairRoundingPlaces" style="margin-left:0px; width:50px" min="0" max="9">
+        </div>
+      </div>
+
+    </div>
+
+  </div>  
+
+</script>
+
+<!-- NODE HELP DIALOG --------------------------------------------------------------->
+<script type="text/html" data-help-name="bp-Awair">
+  <p>This node outputs the latest air data for an AWAIR device by connecting with their
+    cloud API. In order to connect with the API you must have a valid Authentification
+    Token and Organisation ID.
+  </p>
+  <hr style="width: 100%;">
+    <h3>How to use:</h3>
+    <ol type="1">
+      <li>Configure a new connection by clicking on the pencil icon next to the Authentification field and enter you Authentification Token and Organisation ID along with a name for the Authentification.</li>
+      <li>Click on the "Discover" button to display a list of devices available for your account.</li>
+      <li>Select the desired device from the drop down list and click on the tick button to confirm.</li>
+      <li>Select the desired options under the options tab including the output message format.</li>
+      <li>Send any message to the input of the node (usually an inject node) to trigger it.</li>
+    </ol>
+    <hr>
+    <h3>Options:</h3>
+    <ol type="1">
+      <li>Show input activity on node status - This toggles whether the node status is used to display when the node is requesting data from the API.</li>
+      <li>Show any warnings in debug tab - This controls if warning messages are displayed in the debug tab.      </li>
+      <li>JSON block per device - The node will output a message containing the raw JSON response from the API when this option is ticked.</li>
+      <li>Individual messages (MQTT Compatible) - The node will output an individual message for each sensor of the device with a topic equal to the sensor name.</li>
+      <li>Enable Output Rounding - This controls if the values of the individual messages are rounded to a specified number of decimal places (see below, only applies to the Individual Messages output option).</li>
+      <li>Rounding Decimal Places - This is the number of decimal places to round when Output Rounding is enabled.</li>
+    </ol>
+    <hr>
+    <h3>Resources:</h3>
+    <h4><strong>Online Docs:</strong></h4>
+    <ul type="1">
+      <li><a href="https://www.bitpool.com/">bitpool.com</a> - check us out here.</li>
+      <li><a href="https://app.bitpool.com/">app.bitpool.com</a> - set up your account.</li>
+      <li><a href="https://wiki.bitpool.com/">wiki.bitpool.com</a> - find more documentation.</li>
+    </ul>
+  </script>
