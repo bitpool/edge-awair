@@ -39,6 +39,6 @@
     "homepage": "https://github.com/bitpool/edge-awair#readme",        
     "repository": {
         "type": "github",
-        "url": "git+https://github.com/edge-awair.git"
+        "url": "git+https://github.com/bitpool/edge-awair.git"
     }
 }
